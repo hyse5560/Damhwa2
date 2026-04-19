@@ -1,4 +1,6 @@
 // src/server.js
+require('dotenv').config();
+
 const http = require('http');
 const app = require('./app');
 
@@ -7,7 +9,7 @@ const websocket = require('./sockets/websocket');
 const scheduleJob = require('./jobs/scheduleJob');
 
 // 🔥 이벤트 등록 (중요)
-require('./modules/chat/chatEvents');
+require('./modules/chat/chatEvent');
 require('./modules/pending/pendingService');
 require('./modules/schedule/scheduleService');
 require('./modules/notification/fcmService');

@@ -12,8 +12,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // 🔥 라우터 (지금은 비워도 OK)
-const routes = require('./routes');
-app.use('/api', routes);
+//const routes = require('./routes');
+//app.use('/api', routes);
 
 // 🔥 헬스 체크
 app.get('/', (req, res) => {

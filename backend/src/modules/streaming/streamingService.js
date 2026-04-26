@@ -1,25 +1,19 @@
-const websocket = require('../../sockets/websocket');
 const openai = require('../../config/openai');
 const speechService = require('../speech/speechService');
 const { Chat } = require('../../models');
-const { CHAT_SYSTEM } = require('../../config/prompts'); // 프롬프트 불러오기
+const { CHAT_SYSTEM } = require('../../config/prompts');
 
-async function handleStream({ ws, userId, content, conversationId }) {
+async function handleStream({ socket, userId, content, conversationId }) { // ws -> socket
     try {
-        // 1. OpenAI 스트리밍 시작 시 대화용 프롬프트 전달
         const stream = await openai.stream(content, CHAT_SYSTEM);
         let fullText = '';
 
         for await (const chunk of stream) {
             fullText += chunk;
 
-            websocket.send(ws, {
-                type: 'stream',
-                data: chunk
-            });
+            socket.emit('speech:text', { text: fullText }); 
         }
 
-        // 2. AI 답변 DB 저장
         await Chat.create({
             conversation_id: conversationId,
             user_id: userId,
@@ -27,21 +21,17 @@ async function handleStream({ ws, userId, content, conversationId }) {
             content: fullText
         });
 
-        // 3. 🔊 TTS (여기서 생성된 따뜻한 말투의 텍스트가 목소리로 변환됨)
-        const audio = await speechService.textToSpeech(fullText);
+        const audioBase64 = await speechService.textToSpeech(fullText);
 
-        websocket.send(ws, {
-            type: 'audio',
-            data: audio
-        });
+        socket.emit('speech:reply', { reply: fullText });
+        socket.emit('speech:tts', { ttsBase64: audioBase64 });
 
-        websocket.send(ws, {
-            type: 'end'
-        });
+        socket.emit('speech:status', { status: 'idle' });
 
     } catch (error) {
         console.error('Streaming Service Error:', error);
-        websocket.send(ws, { type: 'error', message: '답변 생성 중 오류가 발생했습니다.' });
+        socket.emit('error', { message: '답변 생성 중 오류가 발생했습니다.' });
+        socket.emit('speech:status', { status: 'idle' });
     }
 }
 

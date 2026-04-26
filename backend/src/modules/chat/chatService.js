@@ -1,8 +1,8 @@
 const eventBus = require('../../events/eventBus');
 
-async function handleMessage(ws, { userId, content, conversationId }) {
+async function handleMessage(socket, { userId, content, conversationId }) {
     eventBus.emit('chat:received', {
-        ws,
+        socket, 
         userId,
         content,
         conversationId

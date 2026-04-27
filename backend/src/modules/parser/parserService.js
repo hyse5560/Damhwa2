@@ -1,15 +1,25 @@
 const eventBus = require('../../events/eventBus');
 const openai = require('../../config/openai');
-const { SCHEDULE_PARSER } = require('../../config/prompts'); // 프롬프트 불러오기
+const { SCHEDULE_PARSER } = require('../../config/prompts');
 
 async function parse({ userId, chatId, content }) {
+    if (!content || content === "SYSTEM_EMPTY_INPUT") return;
+
     try {
-        // 1. OpenAI 호출 시 전용 프롬프트 전달
-        const result = await openai.parseSchedule(content, SCHEDULE_PARSER);
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: SCHEDULE_PARSER },
+                { role: "user", content: content }
+            ],
+            response_format: { type: "json_object" }
+        });
 
-        if (!result) return;
+        const result = JSON.parse(response.choices[0].message.content);
 
-        console.log(`[Parser] 일정 감지됨: ${JSON.stringify(result)}`);
+        if (!result || result.no_schedule || !result.parsed_datetime || result.parsed_datetime === 'Invalid date') {
+            return;
+        }
 
         eventBus.emit('schedule:pending', {
             userId,
@@ -18,7 +28,7 @@ async function parse({ userId, chatId, content }) {
         });
 
     } catch (error) {
-        console.error('[Parser Error] 분석 중 에러 발생:', error);
+        console.error('[Parser Error]:', error);
     }
 }
 

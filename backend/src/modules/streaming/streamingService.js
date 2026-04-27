@@ -3,15 +3,43 @@ const speechService = require('../speech/speechService');
 const { Chat } = require('../../models');
 const { CHAT_SYSTEM } = require('../../config/prompts');
 
-async function handleStream({ socket, userId, content, conversationId }) { // ws -> socket
+async function handleStream({ socket, userId, content, conversationId }) {
     try {
-        const stream = await openai.stream(content, CHAT_SYSTEM);
+        const stream = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: CHAT_SYSTEM },
+                { role: "user", content: content }
+            ],
+            stream: true,
+        });
+
         let fullText = '';
+        let sentenceBuffer = ''; 
 
         for await (const chunk of stream) {
-            fullText += chunk;
+            const contentChunk = chunk.choices[0]?.delta?.content || "";
+            if (!contentChunk) continue;
 
-            socket.emit('speech:text', { text: fullText }); 
+            fullText += contentChunk;
+            sentenceBuffer += contentChunk;
+
+            socket.emit('speech:text', { text: fullText });
+
+            if (/[.!?\n]/.test(contentChunk)) {
+                const sentence = sentenceBuffer.trim();
+                if (sentence.length > 0) {
+                    speechService.textToSpeech(sentence)
+                        .then(audio => socket.emit('speech:tts', { ttsBase64: audio }))
+                        .catch(err => console.error('TTS Error:', err));
+                    sentenceBuffer = ''; 
+                }
+            }
+        }
+
+        if (sentenceBuffer.trim().length > 0) {
+            const finalAudio = await speechService.textToSpeech(sentenceBuffer.trim());
+            socket.emit('speech:tts', { ttsBase64: finalAudio });
         }
 
         await Chat.create({
@@ -21,16 +49,11 @@ async function handleStream({ socket, userId, content, conversationId }) { // ws
             content: fullText
         });
 
-        const audioBase64 = await speechService.textToSpeech(fullText);
-
         socket.emit('speech:reply', { reply: fullText });
-        socket.emit('speech:tts', { ttsBase64: audioBase64 });
-
         socket.emit('speech:status', { status: 'idle' });
 
     } catch (error) {
-        console.error('Streaming Service Error:', error);
-        socket.emit('error', { message: '답변 생성 중 오류가 발생했습니다.' });
+        console.error('Streaming Error:', error);
         socket.emit('speech:status', { status: 'idle' });
     }
 }

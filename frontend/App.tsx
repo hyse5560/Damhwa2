@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { PermissionsAndroid } from 'react-native';
+import { audioService } from './src/(tabs)/voice/audioService';
 
 // 파일 위치에 맞춰 import 경로를 설정합니다.
 import CommunityScreen from './src/community/CommunityScreen';
@@ -8,10 +10,22 @@ import RoomInfo from './src/community/info';
 import Onboarding from './src/onboarding';
 import Home from './src/index'; // 메인 화면(index.tsx)
 import Record from './src/(tabs)/record';
+import VoiceScreen from './src/(tabs)/voice/VoiceScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
+  useEffect(() => {
+    // 앱 시작 시 TTS 캐시 초기화
+    audioService.clearCache();
+
+    // 🔥 마이크 권한 요청 추가
+    PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+    );
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Onboarding">
@@ -21,8 +35,6 @@ export default function App() {
           options={{ headerShown: false }}
         />
 
-        {/* 핵심 수정 부분: name을 "Home"에서 "MainTabs"로 변경 */}
-        {/* 온보딩에서 navigation.replace('MainTabs')를 호출하므로 이름을 똑같이 맞춰야 합니다. */}
         <Stack.Screen
           name="MainTabs"
           component={Home}
@@ -32,8 +44,8 @@ export default function App() {
         <Stack.Screen name="Community" component={CommunityScreen} />
         <Stack.Screen name="RoomInfo" component={RoomInfo} />
         <Stack.Screen name="RecordScreen" component={Record} />
+        <Stack.Screen name="VoiceScreen" component={VoiceScreen} />
 
-        {/* 만약 Home이라는 이름도 계속 써야 한다면 아래처럼 하나 더 둬도 됩니다. */}
         <Stack.Screen name="Home" component={Home} />
       </Stack.Navigator>
     </NavigationContainer>

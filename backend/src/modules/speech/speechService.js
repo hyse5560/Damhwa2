@@ -1,46 +1,44 @@
-const gcp = require('../../config/gcp');
+const googleTTS = require('@google-cloud/text-to-speech');
+const googleSpeech = require('@google-cloud/speech');
 
-/**
- * 🔊 TTS (텍스트 → 음성)
- */
+const ttsClient = new googleTTS.TextToSpeechClient();
+const sttClient = new googleSpeech.SpeechClient();
+
 async function textToSpeech(text) {
-    const audio = await gcp.tts(text);
-    return audio;
+    try {
+        const request = {
+            input: { text },
+            voice: { languageCode: 'ko-KR', ssmlGender: 'FEMALE' },
+            audioConfig: { audioEncoding: 'MP3' },
+        };
+        const [response] = await ttsClient.synthesizeSpeech(request);
+        return response.audioContent.toString('base64');
+    } catch (error) {
+        console.error('TTS Error:', error);
+        throw error;
+    }
 }
 
-/**
- * 🔊 실시간 STT 스트림 생성
- * @param {Function} onData - 데이터 수신 시 콜백 (transcript, isFinal)
- * @param {Function} onError - 에러 발생 시 콜백
- */
 function createRecognizeStream(onData, onError) {
     const request = {
         config: {
-            encoding: 'LINEAR16', // 프론트엔드 오디오 포맷에 맞춰 설정 (예: RAW PCM)
+            encoding: 'LINEAR16',
             sampleRateHertz: 16000,
             languageCode: 'ko-KR',
         },
         interimResults: true,
     };
-
-   
-    return gcp.speechClient
+    return sttClient
         .streamingRecognize(request)
         .on('error', (err) => {
-            console.error('GCP STT Stream Error:', err);
             if (onError) onError(err);
         })
         .on('data', (data) => {
             const result = data.results[0];
             if (result && result.alternatives[0]) {
-                const transcript = result.alternatives[0].transcript;
-                const isFinal = result.isFinal;
-                onData(transcript, isFinal);
+                onData(result.alternatives[0].transcript, result.isFinal);
             }
         });
 }
 
-module.exports = {
-    textToSpeech,
-    createRecognizeStream
-};
+module.exports = { textToSpeech, createRecognizeStream };

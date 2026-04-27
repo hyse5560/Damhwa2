@@ -1,3 +1,4 @@
+//MainTabNavigator.tsx
 import React from 'react';
 import { Platform, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';

@@ -1,3 +1,4 @@
+//chatService.js
 const eventBus = require('../../events/eventBus');
 
 async function handleMessage(socket, { userId, content, conversationId }) {

@@ -1,3 +1,4 @@
+//chatEvents.js
 const eventBus = require('../../events/eventBus');
 const { Chat, Conversation } = require('../../models');
 const streamingService = require('../streaming/streamingService');

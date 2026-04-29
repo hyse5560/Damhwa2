@@ -13,8 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
-// [중요] 본인의 PC IP 주소로 수정하세요 (예: 192.168.0.10)
-const API_BASE_URL = 'http://192.168.219.109/api/chat';
+const API_BASE_URL = 'http://10.0.2.2:3000/api/chat';
 
 export default function record() {
   const navigation = useNavigation<any>();
@@ -26,22 +25,24 @@ export default function record() {
     loadHistory();
   }, []);
 
-  // 1. 데이터 불러오기
+  // 1. 데이터 불러오기 (서버 응답 구조 반영)
   const loadHistory = async () => {
     try {
       setLoading(true);
+      // 유저 ID 1번 기준으로 호출
       const response = await axios.get(`${API_BASE_URL}/history/1`);
 
-      // 서버 데이터가 배열인지 확인 후 포맷팅
-      const rawData = Array.isArray(response.data) ? response.data : [];
+      // 서버 라우터가 { success: true, data: [...] } 형식이므로 response.data.data를 확인
+      const rawData = response.data && Array.isArray(response.data.data) ? response.data.data : [];
 
       const formattedData = [
         {
           title: '지난 대화',
           data: rawData.map((item: any) => ({
-            id: item.id?.toString() || Math.random().toString(),
-            title: item.title || '제목 없는 대화',
-            date: item.date || '날짜 정보 없음',
+            id: item.chat_id?.toString() || Math.random().toString(), // Chat 모델의 PK는 chat_id
+            title: item.content || '내용 없는 대화', // Chat 모델의 내용은 content
+            date: item.created_at ? new Date(item.created_at).toLocaleDateString() : '날짜 정보 없음',
+            fullDate: item.created_at, // 상세 페이지 전달용 전체 날짜
           })),
         },
       ];
@@ -57,7 +58,7 @@ export default function record() {
 
   // 2. 삭제 로직
   const handleDelete = (id: string, title: string) => {
-    Alert.alert('이 대화를 지울까요?', `'${title}' 대화 내용이 사라집니다.`, [
+    Alert.alert('이 대화를 지울까요?', `'${title.substring(0, 10)}...' 대화 내용이 사라집니다.`, [
       { text: '아니오', style: 'cancel' },
       {
         text: '지워주세요',
@@ -79,7 +80,7 @@ export default function record() {
     navigation.navigate('HistoryDetail', { id, title, date });
   };
 
-  // 4. 오류 발생 지점 수정: 안전한 필터링 로직
+  // 4. 검색 필터링 로직
   const filteredData = useMemo(() => {
     if (!Array.isArray(sections)) return [];
 
@@ -99,7 +100,7 @@ export default function record() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF9800" />
+        <ActivityIndicator size="large" color="#B36A3C" />
         <Text style={styles.loadingText}>기록을 찾고 있어요...</Text>
       </View>
     );
@@ -107,7 +108,6 @@ export default function record() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 헤더 섹션 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>담화 기록장</Text>
         <TouchableOpacity onPress={loadHistory} style={styles.refreshBtn}>
@@ -115,7 +115,6 @@ export default function record() {
         </TouchableOpacity>
       </View>
 
-      {/* 검색 바 */}
       <View style={styles.searchContainer}>
         <Text style={{ fontSize: 20, marginRight: 10 }}>🔍</Text>
         <TextInput
@@ -127,7 +126,6 @@ export default function record() {
         />
       </View>
 
-      {/* 목록 렌더링 */}
       {filteredData.length > 0 ? (
         <SectionList
           sections={filteredData}

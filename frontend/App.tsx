@@ -11,6 +11,7 @@ import Onboarding from './src/onboarding';
 import Home from './src/index'; // 메인 화면(index.tsx)
 import Record from './src/(tabs)/record';
 import VoiceScreen from './src/(tabs)/voice/VoiceScreen';
+import schedule from './src/(tabs)/schedule';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +46,7 @@ export default function App() {
         <Stack.Screen name="RoomInfo" component={RoomInfo} />
         <Stack.Screen name="RecordScreen" component={Record} />
         <Stack.Screen name="VoiceScreen" component={VoiceScreen} />
+        <Stack.Screen name="ScheduleScreen" component={schedule} />
 
         <Stack.Screen name="Home" component={Home} />
       </Stack.Navigator>

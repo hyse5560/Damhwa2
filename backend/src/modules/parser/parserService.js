@@ -15,16 +15,31 @@ async function parse({ userId, chatId, content }) {
             response_format: { type: "json_object" }
         });
 
-        const result = JSON.parse(response.choices[0].message.content);
+        // 🔥 JSON 안전 파싱
+        let raw = response.choices[0].message.content?.trim();
+        if (!raw) return;
 
-        if (!result || result.no_schedule || !result.parsed_datetime || result.parsed_datetime === 'Invalid date') {
+        if (raw.startsWith("```")) {
+            raw = raw.replace(/```json|```/g, '').trim();
+        }
+
+        let result;
+        try {
+            result = JSON.parse(raw);
+        } catch (e) {
+            console.error('[JSON Parse Error]:', raw);
             return;
         }
+
+        if (!result || result.no_schedule) return;
 
         eventBus.emit('schedule:pending', {
             userId,
             chatId,
-            ...result 
+            content,
+            title: result.title || null,
+            datetime: result.datetime || null,
+            confidence: parseFloat(result.confidence) || 0.0
         });
 
     } catch (error) {

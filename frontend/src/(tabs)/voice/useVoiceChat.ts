@@ -17,6 +17,13 @@ export const useVoiceChat = (onExitRequest: () => void) => {
   const audioQueue = useRef<string[]>([]); 
   const isPlayingAudio = useRef(false);
 
+  // 🔥 추가 (리스너 제어용)
+  const modeRef = useRef(mode);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
   const processAudioQueue = () => {
     if (isPlayingAudio.current || audioQueue.current.length === 0) return;
 
@@ -46,11 +53,13 @@ export const useVoiceChat = (onExitRequest: () => void) => {
         bufferSize: 4096,
       });
 
+      // 🔥 핵심 수정: listener는 여기서 한 번만 등록
       LiveAudioStream.on('data', (chunk) => {
-        if (socketRef.current?.connected) {
+        if (socketRef.current?.connected && modeRef.current === 'listening') {
           socketRef.current.emit('speech:chunk', { userId: '1', audioBase64: chunk });
         }
       });
+
       isInitialized.current = true;
     }
   };
@@ -117,6 +126,7 @@ export const useVoiceChat = (onExitRequest: () => void) => {
       }
 
       initAudio();
+
       socketRef.current?.emit('audio-start', { userId: '1' });
       setMode('listening');
       setResponseText('');
@@ -132,6 +142,9 @@ export const useVoiceChat = (onExitRequest: () => void) => {
 
   const stopRecording = () => {
     LiveAudioStream.stop();
+
+    // 🔥 removeAllListeners 제거 (존재하지 않는 API)
+
     setMode('processing');
     socketRef.current?.emit('audio-end', { userId: '1' }); 
   };

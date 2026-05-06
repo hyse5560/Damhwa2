@@ -15,4 +15,3 @@ declare module 'react-native-live-audio-stream' {
   };
   export default LiveAudioStream;
 }
-declare module 'react-native-sound-player';

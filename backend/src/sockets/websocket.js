@@ -45,7 +45,7 @@ function init(server) {
                     send(socket, 'stt-result', { data: transcript, isFinal });
 
                     if (isFinal) {
-                        console.log('Interim Final Transcript:', transcript);
+                        console.log('Final Transcript:', transcript);
                         fullTranscript += (transcript + ' ');
                     }
                 },
@@ -62,7 +62,7 @@ function init(server) {
                 recognizeStream = null;
                 console.log('STT Stream ended by client (audio-end)');
 
-                setTimeout(async () => {
+                setTimeout(async () => { // 🔥 500 → 1500 수정
                     const finalContent = fullTranscript.trim();
 
                     if (!finalContent) {
@@ -79,7 +79,7 @@ function init(server) {
                         });
                     }
                     fullTranscript = '';
-                }, 500);
+                }, 1500); // 🔥 핵심 수정
             }
         });
 

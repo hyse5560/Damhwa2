@@ -1,0 +1,14 @@
+# Node.js
+node_modules/
+
+# Android
+android/build/
+android/.gradle/
+*.iml
+
+# iOS
+ios/build/
+Pods/
+
+# Environment
+.env

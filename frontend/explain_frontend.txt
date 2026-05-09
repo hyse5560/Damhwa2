@@ -1,0 +1,9 @@
+프론트엔드 기본 설치
+
+npm install
+추가로 필요한 패키지
+npm install axios
+npm install @react-native-async-storage/async-storage
+npm install @react-native-firebase/app
+npm install @react-native-firebase/messaging
+회원 가입 변경 내역 axios → 백엔드 API 요청 AsyncStorage → 로그인 유지 firebase/app → FCM 기본 firebase/messaging → 푸시 토큰

@@ -83,7 +83,7 @@ export default function SettingsScreen() {
             <SettingItem
               icon="notifications-outline"
               title="알림 설정"
-              onPress={() => console.log('알림 설정 이동')}
+              onPress={() => navigation.navigate('NotificationSettings')}
             />
           </View>
         </View>
@@ -95,12 +95,12 @@ export default function SettingsScreen() {
             <SettingItem
               icon="volume-high-outline"
               title="소리 및 글자 크기"
-              onPress={() => console.log('접근성 설정 이동')}
+              onPress={() => navigation.navigate('AccessibilitySettings')}
             />
             <SettingItem
               icon="help-circle-outline"
               title="자주 묻는 질문"
-              onPress={() => console.log('FAQ 이동')}
+              onPress={() => navigation.navigate('FAQScreen')}
             />
           </View>
         </View>

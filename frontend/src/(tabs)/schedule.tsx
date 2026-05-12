@@ -10,25 +10,64 @@ import {
 } from 'react-native';
 import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import axios from 'axios';
+import Ionicons from 'react-native-vector-icons/Ionicons'; // 뒤로가기 아이콘용
+import { useNavigation } from '@react-navigation/native';
 
 // 한국어 설정
 LocaleConfig.locales['kr'] = {
-  monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-  dayNames: ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'],
-  dayNamesShort: ['일','월','화','수','목','금','토'],
+  monthNames: [
+    '1월',
+    '2월',
+    '3월',
+    '4월',
+    '5월',
+    '6월',
+    '7월',
+    '8월',
+    '9월',
+    '10월',
+    '11월',
+    '12월',
+  ],
+  monthNamesShort: [
+    '1월',
+    '2월',
+    '3월',
+    '4월',
+    '5월',
+    '6월',
+    '7월',
+    '8월',
+    '9월',
+    '10월',
+    '11월',
+    '12월',
+  ],
+  dayNames: [
+    '일요일',
+    '월요일',
+    '화요일',
+    '수요일',
+    '목요일',
+    '금요일',
+    '토요일',
+  ],
+  dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
 };
 LocaleConfig.defaultLocale = 'kr';
 
 const screenWidth = Dimensions.get('window').width;
 const API_BASE_URL = 'http://10.0.2.2:3000/api/chat';
 
-export default function schedule() {
+export default function ScheduleScreen() {
+  const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState('');
-  const [schedules, setSchedules] = useState<any[]>([]); // DB 데이터 저장용
+  const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 날짜 변경 시 데이터 로드
+  // 오늘 날짜 구하기 (YYYY-MM-DD 형식)
+  const todayStr = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     if (selectedDate) {
       loadSchedules(selectedDate);
@@ -38,8 +77,9 @@ export default function schedule() {
   const loadSchedules = async (date: string) => {
     try {
       setLoading(true);
-      // 서버의 DB 조회 API 호출 (예: 유저 ID 1번 기준)
-      const response = await axios.get(`${API_BASE_URL}/schedules/1?date=${date}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/schedules/1?date=${date}`,
+      );
       setSchedules(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('일정 로드 에러:', error);
@@ -62,6 +102,18 @@ export default function schedule() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ✅ 1. 커스텀 헤더 (headerShown: false 대응) */}
+      <View style={styles.appBar}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+        >
+          <Ionicons name="chevron-back" size={30} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.appBarTitle}>일정 관리</Text>
+        <View style={{ width: 30 }} />
+      </View>
+
       <Text style={styles.header}>일정</Text>
 
       <CalendarList
@@ -74,44 +126,51 @@ export default function schedule() {
         firstDay={0}
         renderHeader={renderCustomHeader}
         onDayPress={day => setSelectedDate(day.dateString)}
-        markedDates={{
-          [selectedDate]: { selected: true, selectedColor: '#B36A3C' },
-        }}
-        theme={{
-          todayTextColor: '#B36A3C',
-          textDayFontSize: 20,
-          textDayHeaderFontSize: 16,
-          textSectionTitleColor: '#444',
-          'stylesheet.calendar.header': {
-            week: {
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              backgroundColor: '#F0F0F0',
-              paddingVertical: 10,
-              borderRadius: 12,
-              marginBottom: 15,
-              paddingHorizontal: 15,
+        theme={
+          {
+            todayTextColor: '#B36A3C',
+            textDayFontSize: 20,
+            textDayHeaderFontSize: 16,
+            textSectionTitleColor: '#444',
+            'stylesheet.calendar.header': {
+              week: {
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                backgroundColor: '#F0F0F0',
+                paddingVertical: 10,
+                borderRadius: 12,
+                marginBottom: 15,
+                paddingHorizontal: 15,
+              },
             },
-          },
-        } as any}
+          } as any
+        }
         dayComponent={({ date, state }: any) => {
           if (!date) return null;
           const dayOfWeek = new Date(date.dateString).getDay();
           const isSelected = selectedDate === date.dateString;
+          const isToday = date.dateString === todayStr; // ✅ 오늘 여부 확인
           const isDisabled = state === 'disabled';
 
           return (
             <TouchableOpacity
-              style={[styles.dayContainer, isSelected && styles.selectedDayContainer]}
+              style={[
+                styles.dayContainer,
+                isSelected && styles.selectedDayContainer,
+                !isSelected && isToday && styles.todayContainer, // ✅ 오늘 날짜 테두리 효과
+              ]}
               onPress={() => setSelectedDate(date.dateString)}
             >
-              <Text style={[
-                styles.dayText,
-                dayOfWeek === 0 && styles.sunday,
-                dayOfWeek === 6 && styles.saturday,
-                isSelected && styles.selectedDayText,
-                isDisabled && { color: '#ccc' },
-              ]}>
+              <Text
+                style={[
+                  styles.dayText,
+                  dayOfWeek === 0 && styles.sunday,
+                  dayOfWeek === 6 && styles.saturday,
+                  isSelected && styles.selectedDayText,
+                  !isSelected && isToday && styles.todayText, // ✅ 오늘 날짜 텍스트 색상
+                  isDisabled && { color: '#ccc' },
+                ]}
+              >
                 {date.day}
               </Text>
             </TouchableOpacity>
@@ -133,11 +192,11 @@ export default function schedule() {
               <View style={styles.itemTextContainer}>
                 <Text style={styles.itemTitleText}>{item.title}</Text>
                 <Text style={styles.itemTimeText}>
-                  {item.schedule_time 
-                    ? new Date(item.schedule_time).toLocaleTimeString('ko-KR', { 
-                        hour: '2-digit', 
+                  {item.schedule_time
+                    ? new Date(item.schedule_time).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
                         minute: '2-digit',
-                        hour12: true 
+                        hour12: true,
                       })
                     : '시간 정보 없음'}
                 </Text>
@@ -146,7 +205,9 @@ export default function schedule() {
           ))
         ) : (
           <Text style={styles.scheduleText}>
-            {selectedDate ? '아직 등록된 일정이 없습니다.' : '달력에서 날짜를 선택하세요.'}
+            {selectedDate
+              ? '아직 등록된 일정이 없습니다.'
+              : '달력에서 날짜를 선택하세요.'}
           </Text>
         )}
       </View>
@@ -155,14 +216,23 @@ export default function schedule() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1, backgroundColor: '#fff' },
+  // ✅ 커스텀 상단 바 스타일
+  appBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#FFF',
   },
+  appBarTitle: { fontSize: 18, fontWeight: '800', color: '#333' },
+  backBtn: { padding: 5 },
+
   header: {
     fontSize: 28,
     fontWeight: '800',
-    marginVertical: 20,
+    marginBottom: 10,
     marginLeft: 20,
     color: '#333',
   },
@@ -195,6 +265,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#B36A3C',
     borderRadius: 22.5,
   },
+  // ✅ 오늘 날짜 강조 스타일
+  todayContainer: {
+    borderWidth: 2,
+    borderColor: '#B36A3C',
+    borderRadius: 22.5,
+  },
+  todayText: {
+    color: '#B36A3C',
+    fontWeight: '900',
+  },
   dayText: {
     fontSize: 18,
     color: '#333',
@@ -204,14 +284,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
   },
-  sunday: {
-    color: '#E53935',
-  },
-  saturday: {
-    color: '#1E88E5',
-  },
+  sunday: { color: '#E53935' },
+  saturday: { color: '#1E88E5' },
   scheduleBox: {
-    flex: 1, // 남은 공간을 차지하도록 변경
+    flex: 1,
     marginTop: 20,
     marginHorizontal: 20,
     padding: 25,
@@ -227,34 +303,15 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 15,
   },
-  scheduleText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 10,
-  },
-  // DB 연동 리스트용 추가 스타일
-  itemRow: {
-    flexDirection: 'row',
-    marginBottom: 15,
-    alignItems: 'flex-start',
-  },
+  scheduleText: { fontSize: 16, color: '#999', marginTop: 10 },
+  itemRow: { flexDirection: 'row', marginBottom: 15, alignItems: 'flex-start' },
   itemBullet: {
     fontSize: 22,
     color: '#B36A3C',
     marginRight: 10,
     lineHeight: 24,
   },
-  itemTextContainer: {
-    flex: 1,
-  },
-  itemTitleText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  itemTimeText: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 2,
-  },
+  itemTextContainer: { flex: 1 },
+  itemTitleText: { fontSize: 18, fontWeight: '600', color: '#333' },
+  itemTimeText: { fontSize: 14, color: '#888', marginTop: 2 },
 });

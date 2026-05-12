@@ -8,7 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 // 연결할 화면들 임포트 (사용자님의 실제 파일 경로에 맞게 수정하세요)
 import HomeScreen from '../index';
 import CommunityScreen from '../community/CommunityScreen';
-import SettingsScreen from '../setting';
+import SettingsScreen from '../setting/SettingScreen';
 
 const Tab = createBottomTabNavigator();
 

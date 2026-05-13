@@ -57,19 +57,19 @@ export default function Onboarding() {
    * 온보딩 종료 로직
    */
   const finishOnboarding = async () => {
-    try {
-      // 1. 온보딩 완료 상태 저장
-      await AsyncStorage.setItem('onboardingDone', 'true');
+  try {
+    // 1. 온보딩 완료 상태 저장 
+    // (App.tsx에서 체크하는 키인 'alreadyLaunched'와 이름을 맞춰야 합니다)
+    await AsyncStorage.setItem('alreadyLaunched', 'true');
 
-      // 2. 메인 탭으로 이동
-      // 주의: App.tsx의 Stack.Screen name이 'MainTabs'라고 가정합니다.
-      // '(tabs)'는 expo-router 형식이니 네이티브 이름으로 변경하세요.
-      navigation.replace('MainTabs');
-    } catch (e) {
-      Alert.alert('알림', '설정 저장 중 오류가 발생했습니다.');
-      console.error('저장 오류:', e);
-    }
-  };
+    // 2. 회원가입 화면(Auth)으로 이동
+    // replace를 사용해야 온보딩 화면으로 다시 돌아올 수 없습니다.
+    navigation.replace('Auth'); 
+  } catch (e) {
+    Alert.alert('알림', '설정 저장 중 오류가 발생했습니다.');
+    console.error('저장 오류:', e);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>

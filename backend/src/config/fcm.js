@@ -11,16 +11,35 @@ if (!admin.apps.length) {
 const messaging = admin.messaging();
 
 const sendPush = async (token, title, body, data = {}) => {
-  const message = {
-    token,
-    notification: {
-      title,
-      body,
-    },
-    data,
-  };
+  try {
 
-  return await messaging.send(message);
+    console.log('\n========== FCM SEND ==========');
+    console.log('토큰:', token);
+    console.log('제목:', title);
+    console.log('내용:', body);
+    console.log('데이터:', data);
+
+    const message = {
+      token,
+      notification: {
+        title,
+        body,
+      },
+      data,
+    };
+
+    const response = await messaging.send(message);
+
+    console.log('✅ FCM 전송 성공:', response);
+
+    return response;
+
+  } catch (err) {
+
+    console.error('❌ FCM 전송 실패:', err);
+
+    throw err;
+  }
 };
 
 module.exports = {

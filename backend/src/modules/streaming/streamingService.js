@@ -5,12 +5,26 @@ const { CHAT_SYSTEM } = require('../../config/prompts');
 
 async function handleStream({ socket, userId, content, conversationId }) {
     try {
+        const previousChats = await Chat.findAll({
+            where: { conversation_id: conversationId },
+            order: [['created_at', 'DESC']],
+            limit: 6 
+        });
+        
+        const historyMessages = previousChats.reverse().map(chat => ({
+            role: chat.role === 'elder' ? 'user' : 'assistant',
+            content: chat.content
+        }));
+
+        const messages = [
+            { role: "system", content: CHAT_SYSTEM }, 
+            ...historyMessages,                        
+            { role: "user", content: content }       
+        ];
+
         const stream = await openai.chat.completions.create({
             model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: CHAT_SYSTEM },
-                { role: "user", content: content }
-            ],
+            messages: messages, 
             stream: true,
         });
 

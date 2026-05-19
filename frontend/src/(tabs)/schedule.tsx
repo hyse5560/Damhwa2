@@ -16,41 +16,15 @@ import { useNavigation } from '@react-navigation/native';
 // 한국어 설정
 LocaleConfig.locales['kr'] = {
   monthNames: [
-    '1월',
-    '2월',
-    '3월',
-    '4월',
-    '5월',
-    '6월',
-    '7월',
-    '8월',
-    '9월',
-    '10월',
-    '11월',
-    '12월',
+    '1월', '2월', '3월', '4월', '5월', '6월',
+    '7월', '8월', '9월', '10월', '11월', '12월',
   ],
   monthNamesShort: [
-    '1월',
-    '2월',
-    '3월',
-    '4월',
-    '5월',
-    '6월',
-    '7월',
-    '8월',
-    '9월',
-    '10월',
-    '11월',
-    '12월',
+    '1월', '2월', '3월', '4월', '5월', '6월',
+    '7월', '8월', '9월', '10월', '11월', '12월',
   ],
   dayNames: [
-    '일요일',
-    '월요일',
-    '화요일',
-    '수요일',
-    '목요일',
-    '금요일',
-    '토요일',
+    '일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일',
   ],
   dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
 };
@@ -74,13 +48,26 @@ export default function ScheduleScreen() {
     }
   }, [selectedDate]);
 
+  // 1. 일정 불러오기 로직 수정 (서버의 객체 및 내부 data 배열 완벽 파싱)
   const loadSchedules = async (date: string) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/schedules/1?date=${date}`,
-      );
-      setSchedules(Array.isArray(response.data) ? response.data : []);
+      
+      // 304 캐시 버그 차단을 위한 헤더 옵션 추가
+      const response = await axios.get(`${API_BASE_URL}/schedules/1?date=${date}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
+
+      // 백엔드가 { success: true, data: [...] } 형태로 주므로 response.data.data 확인
+      if (response.data && Array.isArray(response.data.data)) {
+        setSchedules(response.data.data);
+      } else {
+        setSchedules([]);
+      }
     } catch (error) {
       console.error('일정 로드 에러:', error);
       setSchedules([]);
@@ -102,7 +89,7 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ✅ 1. 커스텀 헤더 (headerShown: false 대응) */}
+      {/* 커스텀 상단 바 */}
       <View style={styles.appBar}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -116,6 +103,7 @@ export default function ScheduleScreen() {
 
       <Text style={styles.header}>일정</Text>
 
+      {/* 캘린더 리스트 컴포넌트 */}
       <CalendarList
         horizontal
         pagingEnabled
@@ -149,7 +137,7 @@ export default function ScheduleScreen() {
           if (!date) return null;
           const dayOfWeek = new Date(date.dateString).getDay();
           const isSelected = selectedDate === date.dateString;
-          const isToday = date.dateString === todayStr; // ✅ 오늘 여부 확인
+          const isToday = date.dateString === todayStr;
           const isDisabled = state === 'disabled';
 
           return (
@@ -157,7 +145,7 @@ export default function ScheduleScreen() {
               style={[
                 styles.dayContainer,
                 isSelected && styles.selectedDayContainer,
-                !isSelected && isToday && styles.todayContainer, // ✅ 오늘 날짜 테두리 효과
+                !isSelected && isToday && styles.todayContainer,
               ]}
               onPress={() => setSelectedDate(date.dateString)}
             >
@@ -167,7 +155,7 @@ export default function ScheduleScreen() {
                   dayOfWeek === 0 && styles.sunday,
                   dayOfWeek === 6 && styles.saturday,
                   isSelected && styles.selectedDayText,
-                  !isSelected && isToday && styles.todayText, // ✅ 오늘 날짜 텍스트 색상
+                  !isSelected && isToday && styles.todayText,
                   isDisabled && { color: '#ccc' },
                 ]}
               >
@@ -178,6 +166,7 @@ export default function ScheduleScreen() {
         }}
       />
 
+      {/* 하단 일정 표시 박스 */}
       <View style={styles.scheduleBox}>
         <Text style={styles.scheduleTitle}>
           {selectedDate ? `${selectedDate} 일정` : '확인할 날짜를 눌러주세요'}
@@ -217,7 +206,6 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  // ✅ 커스텀 상단 바 스타일
   appBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -228,7 +216,6 @@ const styles = StyleSheet.create({
   },
   appBarTitle: { fontSize: 18, fontWeight: '800', color: '#333' },
   backBtn: { padding: 5 },
-
   header: {
     fontSize: 28,
     fontWeight: '800',
@@ -265,7 +252,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#B36A3C',
     borderRadius: 22.5,
   },
-  // ✅ 오늘 날짜 강조 스타일
   todayContainer: {
     borderWidth: 2,
     borderColor: '#B36A3C',

@@ -16,21 +16,13 @@ eventBus.on('schedule:pending', async (data) => {
         });
 
         if (pending) {
-            // 🔥 상태 체크 (이미 확정된 건 무시)
             if (pending.status !== 'pending') return;
 
             await pending.update({
                 parsed_title: data.title || pending.parsed_title,
                 parsed_datetime: data.datetime || pending.parsed_datetime,
-
-                // 🔥 길이 제한 (DB 보호)
                 raw_message: (pending.raw_message + " | " + data.content).slice(-500),
-
-                // 🔥 confidence는 최대값 유지
-                confidence: Math.max(
-                    parseFloat(data.confidence) || 0,
-                    parseFloat(pending.confidence) || 0
-                )
+                confidence: Math.max(parseFloat(data.confidence) || 0, parseFloat(pending.confidence) || 0)
             });
         } else {
             pending = await PendingSchedule.create({
@@ -44,14 +36,22 @@ eventBus.on('schedule:pending', async (data) => {
             });
         }
 
-        // 🔥 날짜 검증 강화
+        const datetimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+        const hasFullDateTime = pending.parsed_datetime && datetimeRegex.test(pending.parsed_datetime);
+        
         const isValidDate = pending.parsed_datetime && 
-            !isNaN(new Date(pending.parsed_datetime));
+            !isNaN(new Date(pending.parsed_datetime)) && 
+            hasFullDateTime;
 
         const isComplete = pending.parsed_title && isValidDate;
 
         if (isComplete && parseFloat(pending.confidence) > 0.6) {
+            // 🎯 모든 퍼즐 조각(제목+시간)이 다 맞춰졌으므로 최종 등록 이동!
             eventBus.emit('schedule:confirm', pending);
+        } else {
+            // 💡 [수정] chatService 연결 이벤트를 다 없애고 간단한 로그만 남깁니다.
+            // 대화 유도는 챗봇 프롬프트(CHAT_SYSTEM)가 알아서 처리할 것입니다.
+            console.log(`--- [정보 부족] 현재 상태 보존 중 (Title: ${pending.parsed_title ? 'O' : 'X'}, Time: ${isValidDate ? 'O' : 'X'}) ---`);
         }
 
     } catch (err) {

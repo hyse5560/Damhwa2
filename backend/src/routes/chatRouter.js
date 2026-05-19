@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
-// ✅ ChatHistory 대신 실제 모델명인 Chat을 불러옵니다.
 const { Schedule, Chat } = require('../models');
 const { Op } = require('sequelize');
 
-/**
- * 공통 유틸 함수
- */
 const isValidDate = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
 
 const parseUserId = (userId) => {
@@ -14,14 +10,11 @@ const parseUserId = (userId) => {
     return isNaN(parsed) ? null : parsed;
 };
 
-/**
- * ✅ 1. 일정 조회 (Schedule)
- * GET /api/chat/schedules/:userId?date=YYYY-MM-DD
- */
+
 router.get('/schedules/:userId', async (req, res) => {
     try {
         const userId = parseUserId(req.params.userId);
-        const { date } = req.query;
+        const { date } = req.query; // 예: '2026-05-15'
 
         if (!userId) {
             return res.status(400).json({ success: false, message: 'Invalid userId' });
@@ -33,14 +26,15 @@ router.get('/schedules/:userId', async (req, res) => {
 
         console.log(`📥 일정 조회 → userId: ${userId}, date: ${date}`);
 
+
+        const startOfDay = `${date} 00:00:00`;
+        const endOfDay = `${date} 23:59:59`;
+
         const results = await Schedule.findAll({
             where: {
                 user_id: userId,
                 schedule_time: {
-                    [Op.and]: [
-                        { [Op.gte]: `${date} 00:00:00` },
-                        { [Op.lte]: `${date} 23:59:59` }
-                    ]
+                    [Op.between]: [startOfDay, endOfDay]
                 }
             },
             order: [['schedule_time', 'ASC']]
@@ -58,10 +52,7 @@ router.get('/schedules/:userId', async (req, res) => {
     }
 });
 
-/**
- * ✅ 2. 대화 기록 조회 (History)
- * GET /api/chat/history/:userId
- */
+
 router.get('/history/:userId', async (req, res) => {
     try {
         const userId = parseUserId(req.params.userId);
@@ -72,7 +63,6 @@ router.get('/history/:userId', async (req, res) => {
 
         console.log(`📥 대화 기록 조회 → userId: ${userId}`);
 
-        // ✅ Chat.findAll을 사용하여 대화 내역을 가져옵니다.
         const history = await Chat.findAll({
             where: { user_id: userId },
             order: [['created_at', 'DESC']]

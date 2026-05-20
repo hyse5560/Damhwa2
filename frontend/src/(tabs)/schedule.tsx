@@ -31,7 +31,7 @@ LocaleConfig.locales['kr'] = {
 LocaleConfig.defaultLocale = 'kr';
 
 const screenWidth = Dimensions.get('window').width;
-const API_BASE_URL = 'http://10.0.2.2:3000/api/chat';
+const API_BASE_URL = 'http://172.30.1.65:3000/api/chat';
 
 export default function ScheduleScreen() {
   const navigation = useNavigation();

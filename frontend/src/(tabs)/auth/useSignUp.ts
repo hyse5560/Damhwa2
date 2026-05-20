@@ -13,7 +13,7 @@ export function useSignUp() {
   const [loading, setLoading] = useState(false);
 
   const API_BASE_URL = Platform.OS === 'android' 
-    ? 'http://10.0.2.2:3000' 
+    ? 'http://172.30.1.65:3000' 
     : 'http://localhost:3000';
 
   const getFcmToken = async () => {

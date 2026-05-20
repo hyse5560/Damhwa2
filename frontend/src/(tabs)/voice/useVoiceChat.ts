@@ -5,7 +5,7 @@ import io from 'socket.io-client';
 import { audioService } from './audioService';
 
 export type VoiceMode = 'intro' | 'idle' | 'listening' | 'speaking' | 'processing';
-const SERVER_URL = 'http://10.0.2.2:3000';
+const SERVER_URL = 'http://172.30.1.65:3000';
 
 export const useVoiceChat = (onExitRequest: () => void) => {
   const [mode, setMode] = useState<VoiceMode>('intro');

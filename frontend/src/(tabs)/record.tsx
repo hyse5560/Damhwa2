@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons'; // 헤더 화살표 아이콘 사용을 위해 추가
 import axios from 'axios';
 
 const API_BASE_URL = 'http://10.0.2.2:3000/api/chat';
@@ -25,24 +26,25 @@ export default function record() {
     loadHistory();
   }, []);
 
-  // 1. 데이터 불러오기 (서버 응답 구조 반영)
   const loadHistory = async () => {
     try {
       setLoading(true);
-      // 유저 ID 1번 기준으로 호출
       const response = await axios.get(`${API_BASE_URL}/history/1`);
-
-      // 서버 라우터가 { success: true, data: [...] } 형식이므로 response.data.data를 확인
-      const rawData = response.data && Array.isArray(response.data.data) ? response.data.data : [];
+      const rawData =
+        response.data && Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
 
       const formattedData = [
         {
           title: '지난 대화',
           data: rawData.map((item: any) => ({
-            id: item.chat_id?.toString() || Math.random().toString(), // Chat 모델의 PK는 chat_id
-            title: item.content || '내용 없는 대화', // Chat 모델의 내용은 content
-            date: item.created_at ? new Date(item.created_at).toLocaleDateString() : '날짜 정보 없음',
-            fullDate: item.created_at, // 상세 페이지 전달용 전체 날짜
+            id: item.chat_id?.toString() || Math.random().toString(),
+            title: item.content || '내용 없는 대화',
+            date: item.created_at
+              ? new Date(item.created_at).toLocaleDateString()
+              : '날짜 정보 없음',
+            fullDate: item.created_at,
           })),
         },
       ];
@@ -56,34 +58,34 @@ export default function record() {
     }
   };
 
-  // 2. 삭제 로직
   const handleDelete = (id: string, title: string) => {
-    Alert.alert('이 대화를 지울까요?', `'${title.substring(0, 10)}...' 대화 내용이 사라집니다.`, [
-      { text: '아니오', style: 'cancel' },
-      {
-        text: '지워주세요',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await axios.delete(`${API_BASE_URL}/history/${id}`);
-            loadHistory();
-          } catch (error) {
-            Alert.alert('오류', '삭제하지 못했습니다.');
-          }
+    Alert.alert(
+      '이 대화를 지울까요?',
+      `'${title.substring(0, 10)}...' 대화 내용이 사라집니다.`,
+      [
+        { text: '아니오', style: 'cancel' },
+        {
+          text: '지워주세요',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await axios.delete(`${API_BASE_URL}/history/${id}`);
+              loadHistory();
+            } catch (error) {
+              Alert.alert('오류', '삭제하지 못했습니다.');
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
-  // 3. 상세 이동
   const handlePressItem = (id: string, title: string, date: string) => {
     navigation.navigate('HistoryDetail', { id, title, date });
   };
 
-  // 4. 검색 필터링 로직
   const filteredData = useMemo(() => {
     if (!Array.isArray(sections)) return [];
-
     return sections
       .map(section => ({
         ...section,
@@ -108,12 +110,22 @@ export default function record() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>담화 기록장</Text>
+      <View style={styles.appBar}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+        >
+          <Ionicons name="chevron-back" size={30} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.appBarTitle}>담화 기록장</Text>
+
+        {/* 우측 빈 공간 대신 유용한 새로고침 버튼 매핑 배치 */}
         <TouchableOpacity onPress={loadHistory} style={styles.refreshBtn}>
-          <Text style={{ fontSize: 24 }}>🔄</Text>
+          <Text style={{ fontSize: 22 }}>🔄</Text>
         </TouchableOpacity>
       </View>
+
+      <Text style={styles.bigHeaderTitle}>기록장</Text>
 
       <View style={styles.searchContainer}>
         <Text style={{ fontSize: 20, marginRight: 10 }}>🔍</Text>
@@ -174,16 +186,27 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 15, fontSize: 18, color: '#666' },
-  header: {
+
+  appBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 25,
-    paddingTop: 30,
-    paddingBottom: 15,
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#FFF',
   },
-  headerTitle: { fontSize: 34, fontWeight: '800', color: '#333' },
+  appBarTitle: { fontSize: 18, fontWeight: '800', color: '#333' },
+  backBtn: { padding: 5 },
   refreshBtn: { padding: 5 },
+
+  bigHeaderTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 10,
+    marginLeft: 20,
+    color: '#333',
+  },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

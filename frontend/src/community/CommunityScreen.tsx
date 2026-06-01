@@ -7,37 +7,36 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-  Alert, // Native Alert 추가
+  Alert,
 } from 'react-native';
-// 1. 순수 네이티브 아이콘 라이브러리로 교체
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const MAIN_BROWN = '#BF6A2A';
 const SUB_BEIGE = '#FFF9F3';
 
 export default function CommunityScreen() {
-  // 2. 네비게이션 타입 지정 (오류 방지용 any)
   const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
 
+  // 🌟 인원수 관련 데이터를 제거하고 깔끔한 기본 정보만 유지
   const chatRooms = [
     {
       id: 1,
       title: '오늘 아침 신문 이야기',
-      time: '매일 오전 11:30',
-      thumb: '☕',
+      time: '매일 오전 10:00',
+      thumb: '📰',
     },
     {
       id: 2,
-      title: '우리가 좋아하는 가요 무대',
+      title: '7080 노래 같이 들어요',
       time: '매일 오후 02:00',
-      thumb: '🐶',
+      thumb: '📻',
     },
     {
       id: 3,
-      title: '7080 노래 같이 들어요',
+      title: '동네 한바퀴',
       time: '매일 오후 07:00',
-      thumb: '📀',
+      thumb: '🏃‍♂️',
     },
   ];
 
@@ -68,11 +67,13 @@ export default function CommunityScreen() {
             </View>
 
             <View style={styles.infoArea}>
-              <Text style={styles.roomTag}>강좌</Text>
+              <Text style={styles.roomTag}>소통 공간</Text>
               <Text style={styles.roomTitle} numberOfLines={2}>
                 {room.title}
               </Text>
-              <Text style={styles.roomTime}>{room.time} / 정원</Text>
+
+              {/* 🌟 [수정 포인트] 뒤에 붙던 '/ 정원' 문구를 지우고 시간만 깔끔하게 출력 */}
+              <Text style={styles.roomTime}>{room.time}</Text>
 
               <TouchableOpacity
                 style={styles.joinButton}
@@ -87,7 +88,7 @@ export default function CommunityScreen() {
         ))}
       </ScrollView>
 
-      {/* 하단 버튼: alert 대신 Native Alert 사용 */}
+      {/* 하단 플로팅 버튼 */}
       <TouchableOpacity
         style={styles.makeButton}
         onPress={() =>
@@ -143,19 +144,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   roomTitle: {
-    color: '#333',
+    color: '#222222',
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 4,
     lineHeight: 28,
   },
-  roomTime: { color: '#888', fontSize: 16, marginBottom: 12 },
+  // 🌟 정원이 빠지면서 한 줄로 간결해진 만큼 폰트 크기와 가독성을 최적화했습니다.
+  roomTime: {
+    color: '#666666',
+    fontSize: 17,
+    fontWeight: '600',
+    marginBottom: 14,
+  },
   joinButton: {
     backgroundColor: MAIN_BROWN,
     alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   joinButtonText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
   makeButton: {

@@ -9,11 +9,8 @@ import {
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import messaging from '@react-native-firebase/messaging';
-import notifee, {
-  AndroidImportance,
-} from '@notifee/react-native';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 import { audioService } from './src/(tabs)/voice/audioService';
 
@@ -23,11 +20,15 @@ import Onboarding from './src/onboarding';
 import SignUpScreen from './src/(tabs)/auth/index';
 import CommunityScreen from './src/community/CommunityScreen';
 import RoomInfo from './src/community/info';
+import CommunityRoom from './src/community/CommunityRoom';
 
 // 기능 화면들
 import Record from './src/(tabs)/record';
 import VoiceScreen from './src/(tabs)/voice/VoiceScreen';
 import schedule from './src/(tabs)/schedule';
+
+// 🌟 [수정 포인트] HistoryDetail 파일이 src/(tabs)/ 폴더 안에 있으므로 경로를 맞춰 임포트합니다.
+import HistoryDetail from './src/(tabs)/HistoryDetail';
 
 // 설정 화면들
 import NotificationSettings from './src/setting/NotificationSettings';
@@ -38,21 +39,16 @@ import FAQScreen from './src/setting/FAQScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Onboarding');
 
   useEffect(() => {
-
     const initNotifications = async () => {
-
       try {
-
         // Android 13+ 알림 권한 요청
         if (Platform.OS === 'android') {
-
           await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
           );
 
           // Notification Channel 생성
@@ -65,30 +61,25 @@ export default function App() {
 
         // Foreground FCM 수신 처리
         messaging().onMessage(async remoteMessage => {
-
           console.log('🔥 Foreground FCM:', remoteMessage);
 
           await notifee.displayNotification({
             title: remoteMessage.notification?.title || '알림',
             body: remoteMessage.notification?.body || '',
-
             android: {
               channelId: 'default',
-
               pressAction: {
                 id: 'default',
               },
             },
           });
         });
-
       } catch (err) {
         console.error('FCM 초기화 에러:', err);
       }
     };
 
     const initApp = async () => {
-
       // 1. 알림 초기화
       await initNotifications();
 
@@ -100,7 +91,6 @@ export default function App() {
       // 3. 마이크 권한 요청
       if (Platform.OS === 'android') {
         try {
-
           await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
             {
@@ -111,7 +101,6 @@ export default function App() {
               buttonPositive: '허용',
             },
           );
-
         } catch (err) {
           console.warn(err);
         }
@@ -119,26 +108,18 @@ export default function App() {
 
       // 4. 온보딩 여부 확인
       try {
-
-        const alreadyLaunched =
-          await AsyncStorage.getItem('alreadyLaunched');
-
+        const alreadyLaunched = await AsyncStorage.getItem('alreadyLaunched');
         if (alreadyLaunched !== null) {
           setInitialRoute('Auth');
         }
-
       } catch (e) {
-
         console.error('AsyncStorage Error:', e);
-
       } finally {
-
         setIsLoading(false);
       }
     };
 
     initApp();
-
   }, []);
 
   // 로딩 화면
@@ -149,6 +130,7 @@ export default function App() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
+          backgroundColor: '#FFFFFF',
         }}
       >
         <ActivityIndicator size="large" color="#B36A3C" />
@@ -158,85 +140,50 @@ export default function App() {
 
   return (
     <NavigationContainer>
-
-      <Stack.Navigator initialRouteName={initialRoute}>
-
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade_from_bottom', // 시니어 인지 속도에 맞춘 안정감 있는 상향 전환 효과
+        }}
+      >
         {/* 온보딩 */}
-        <Stack.Screen
-          name="Onboarding"
-          component={Onboarding}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Onboarding" component={Onboarding} />
 
         {/* 회원가입 */}
-        <Stack.Screen
-          name="Auth"
-          component={SignUpScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Auth" component={SignUpScreen} />
 
         {/* 메인 탭 */}
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabNavigator}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
 
         {/* 프로필 수정 */}
-        <Stack.Screen
-          name="EditProfile"
-          component={EditProfile}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="EditProfile" component={EditProfile} />
 
         {/* 설정 */}
         <Stack.Screen
           name="NotificationSettings"
           component={NotificationSettings}
-          options={{ headerShown: false }}
         />
-
         <Stack.Screen
           name="AccessibilitySettings"
           component={AccessibilitySettings}
-          options={{ headerShown: false }}
         />
 
         {/* FAQ */}
-        <Stack.Screen
-          name="FAQScreen"
-          component={FAQScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="FAQScreen" component={FAQScreen} />
 
-        {/* 기타 화면 */}
-        <Stack.Screen
-          name="Community"
-          component={CommunityScreen}
-        />
+        {/* 커뮤니티 및 주요 기능 화면들 */}
+        <Stack.Screen name="Community" component={CommunityScreen} />
+        <Stack.Screen name="RoomInfo" component={RoomInfo} />
+        <Stack.Screen name="CommunityRoom" component={CommunityRoom} />
 
-        <Stack.Screen
-          name="RoomInfo"
-          component={RoomInfo}
-        />
+        <Stack.Screen name="RecordScreen" component={Record} />
+        <Stack.Screen name="VoiceScreen" component={VoiceScreen} />
+        <Stack.Screen name="ScheduleScreen" component={schedule} />
 
-        <Stack.Screen
-          name="RecordScreen"
-          component={Record}
-        />
-
-        <Stack.Screen
-          name="VoiceScreen"
-          component={VoiceScreen}
-        />
-
-        <Stack.Screen
-          name="ScheduleScreen"
-          component={schedule}
-        />
-
+        {/* 🌟 [추가 등록] record에서 호출하는 상세 화면을 스택 라우터에 바인딩합니다. */}
+        <Stack.Screen name="HistoryDetail" component={HistoryDetail} />
       </Stack.Navigator>
-
     </NavigationContainer>
   );
 }

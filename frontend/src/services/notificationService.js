@@ -1,15 +1,12 @@
 import messaging from '@react-native-firebase/messaging';
-import notifee, {
-  AndroidImportance,
-} from '@notifee/react-native';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 import { PermissionsAndroid } from 'react-native';
 
 export async function initNotifications() {
-
   // Android 13+ 권한 요청
   await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
   );
 
   // Notification Channel 생성
@@ -21,7 +18,6 @@ export async function initNotifications() {
 
   // Foreground 메시지 수신
   messaging().onMessage(async remoteMessage => {
-
     console.log('🔥 Foreground FCM:', remoteMessage);
 
     await notifee.displayNotification({

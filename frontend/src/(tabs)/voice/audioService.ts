@@ -7,7 +7,6 @@ let queue: { base64: string; onFinish: () => void }[] = [];
 let isPlaying = false;
 
 export const audioService = {
-
   playBase64: async (base64: string, onFinish: () => void) => {
     queue.push({ base64, onFinish });
 
@@ -28,7 +27,6 @@ export const audioService = {
       // 큐 초기화
       queue = [];
       isPlaying = false;
-
     } catch (e) {
       console.error('중단 에러:', e);
     }
@@ -38,22 +36,19 @@ export const audioService = {
     try {
       const files = await RNFS.readDir(RNFS.CachesDirectoryPath);
 
-      const ttsFiles = files.filter(file =>
-        file.name.startsWith('tts_') && file.name.endsWith('.mp3')
+      const ttsFiles = files.filter(
+        file => file.name.startsWith('tts_') && file.name.endsWith('.mp3'),
       );
 
       await Promise.all(
-        ttsFiles.map(file =>
-          RNFS.unlink(file.path).catch(() => {})
-        )
+        ttsFiles.map(file => RNFS.unlink(file.path).catch(() => {})),
       );
 
       console.log('TTS 캐시 삭제 완료');
-
     } catch (e) {
       console.log('캐시 삭제 실패:', e);
     }
-  }
+  },
 };
 
 const processQueue = async () => {
@@ -67,9 +62,7 @@ const processQueue = async () => {
   const { base64, onFinish } = queue.shift()!;
 
   try {
-    const pureBase64 = base64.includes(',')
-      ? base64.split(',')[1]
-      : base64;
+    const pureBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
 
     const filePath = `${RNFS.CachesDirectoryPath}/tts_${Date.now()}.mp3`;
 
@@ -80,22 +73,18 @@ const processQueue = async () => {
       subscription = null;
     }
 
-    subscription = SoundPlayer.addEventListener(
-      'FinishedPlaying',
-      async () => {
-        subscription?.remove();
-        subscription = null;
+    subscription = SoundPlayer.addEventListener('FinishedPlaying', async () => {
+      subscription?.remove();
+      subscription = null;
 
-        await RNFS.unlink(filePath).catch(() => {});
+      await RNFS.unlink(filePath).catch(() => {});
 
-        onFinish();
+      onFinish();
 
-        processQueue(); 
-      }
-    );
+      processQueue();
+    });
 
     SoundPlayer.playUrl(`file://${filePath}`);
-
   } catch (error) {
     console.error('재생 에러:', error);
     onFinish();

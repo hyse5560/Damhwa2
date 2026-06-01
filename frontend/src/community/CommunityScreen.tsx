@@ -1,5 +1,4 @@
-import React from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -7,47 +6,95 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-  Alert, // Native Alert 추가
+  Alert,
+  TextInput,
 } from 'react-native';
-// 1. 순수 네이티브 아이콘 라이브러리로 교체
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
 const MAIN_BROWN = '#BF6A2A';
 const SUB_BEIGE = '#FFF9F3';
 
 export default function CommunityScreen() {
-  // 2. 네비게이션 타입 지정 (오류 방지용 any)
   const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
 
-  const chatRooms = [
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchText, setSearchText] = useState('');
+
+  const [chatRooms, setChatRooms] = useState([
     {
       id: 1,
       title: '오늘 아침 신문 이야기',
-      time: '매일 오전 11:30',
-      thumb: '☕',
+      time: '매일 오전 10:00',
+      thumb: '📰',
+      isMine: false,
     },
     {
       id: 2,
-      title: '우리가 좋아하는 가요 무대',
+      title: '7080 노래 같이 들어요',
       time: '매일 오후 02:00',
-      thumb: '🐶',
+      thumb: '📻',
+      isMine: false,
     },
     {
       id: 3,
-      title: '7080 노래 같이 들어요',
+      title: '동네 한바퀴',
       time: '매일 오후 07:00',
-      thumb: '📀',
+      thumb: '🏃‍♂️',
+      isMine: false,
     },
-  ];
+  ]);
+
+  const addRoom = (newRoom: any) => {
+    const roomWithMine = { ...newRoom, isMine: true };
+    setChatRooms([...chatRooms, roomWithMine]);
+  };
+
+  const deleteRoom = (id: number, title: string) => {
+    Alert.alert('삭제 확인', `'${title}' 방을 삭제하시겠습니까?`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => setChatRooms(chatRooms.filter(room => room.id !== id)),
+      },
+    ]);
+  };
+
+  // 🌟 검색 및 정렬 로직
+  // 1. 검색어로 필터링
+  // 2. sort를 사용하여 isMine이 true인 방을 상단으로 이동
+  const processedRooms = chatRooms
+    .filter(room => room.title.toLowerCase().includes(searchText.toLowerCase()))
+    .sort((a, b) => Number(b.isMine) - Number(a.isMine));
 
   return (
     <View style={styles.container}>
-      {/* 상단 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.title}>오픈 채팅방</Text>
-        <TouchableOpacity>
-          <Ionicons name="search" size={width * 0.08} color={MAIN_BROWN} />
+        {isSearching ? (
+          <TextInput
+            style={styles.searchInput}
+            placeholder="방 제목을 검색하세요"
+            value={searchText}
+            onChangeText={setSearchText}
+            autoFocus
+          />
+        ) : (
+          <Text style={styles.title}>오픈 채팅방</Text>
+        )}
+
+        <TouchableOpacity
+          onPress={() => {
+            setIsSearching(!isSearching);
+            setSearchText('');
+          }}
+        >
+          <Ionicons
+            name={isSearching ? 'close' : 'search'}
+            size={width * 0.08}
+            color={MAIN_BROWN}
+          />
         </TouchableOpacity>
       </View>
 
@@ -55,44 +102,45 @@ export default function CommunityScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        {chatRooms.map(room => (
-          <TouchableOpacity
-            key={room.id}
-            style={styles.card}
-            onPress={() =>
-              navigation.navigate('RoomInfo', { title: room.title })
-            }
-          >
-            <View style={styles.thumbArea}>
-              <Text style={styles.thumbEmoji}>{room.thumb}</Text>
-            </View>
-
-            <View style={styles.infoArea}>
-              <Text style={styles.roomTag}>강좌</Text>
-              <Text style={styles.roomTitle} numberOfLines={2}>
-                {room.title}
-              </Text>
-              <Text style={styles.roomTime}>{room.time} / 정원</Text>
-
+        {processedRooms.map(room => (
+          <View key={room.id} style={styles.card}>
+            {room.isMine && (
               <TouchableOpacity
-                style={styles.joinButton}
-                onPress={() =>
-                  navigation.navigate('RoomInfo', { title: room.title })
-                }
+                style={styles.deleteButton}
+                onPress={() => deleteRoom(room.id, room.title)}
               >
-                <Text style={styles.joinButtonText}>참여하기</Text>
+                <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
               </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('RoomInfo', { title: room.title })
+              }
+            >
+              <View style={styles.thumbArea}>
+                <Text style={styles.thumbEmoji}>{room.thumb}</Text>
+              </View>
+              <View style={styles.infoArea}>
+                <Text style={styles.roomTag}>
+                  {room.isMine ? '내가 만든 방' : '소통 공간'}
+                </Text>
+                <Text style={styles.roomTitle} numberOfLines={2}>
+                  {room.title}
+                </Text>
+                <Text style={styles.roomTime}>{room.time}</Text>
+                <View style={styles.joinButton}>
+                  <Text style={styles.joinButtonText}>참여하기</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
 
-      {/* 하단 버튼: alert 대신 Native Alert 사용 */}
       <TouchableOpacity
         style={styles.makeButton}
-        onPress={() =>
-          Alert.alert('안내', '채팅방 만들기 화면으로 이동합니다.')
-        }
+        onPress={() => navigation.navigate('CreateRoom', { onGoBack: addRoom })}
       >
         <Ionicons name="add-circle" size={30} color="#FFF" />
         <Text style={styles.makeButtonText}>채팅방 만들기</Text>
@@ -101,6 +149,7 @@ export default function CommunityScreen() {
   );
 }
 
+// (스타일 코드는 이전과 동일합니다)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -123,10 +172,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 20,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+    padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 20,
   },
   thumbArea: {
     height: 160,
@@ -142,20 +196,36 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: '600',
   },
+  searchInput: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#FFF',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    marginRight: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: MAIN_BROWN,
+  },
   roomTitle: {
-    color: '#333',
+    color: '#222222',
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 4,
     lineHeight: 28,
   },
-  roomTime: { color: '#888', fontSize: 16, marginBottom: 12 },
+  roomTime: {
+    color: '#666666',
+    fontSize: 17,
+    fontWeight: '600',
+    marginBottom: 14,
+  },
   joinButton: {
     backgroundColor: MAIN_BROWN,
     alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   joinButtonText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
   makeButton: {
@@ -168,15 +238,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 30,
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
   makeButtonText: {
     color: '#FFF',
     fontWeight: '800',
-    fontSize: 18,
+    fontSize: 16,
     marginLeft: 8,
   },
 });

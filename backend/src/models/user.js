@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(20),
       unique: true,
     },
+    city: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
     push_token: DataTypes.TEXT,
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -21,6 +25,5 @@ module.exports = (sequelize, DataTypes) => {
     createdAt: "created_at",
     updatedAt: "updated_at",
   });
-
   return User;
 };

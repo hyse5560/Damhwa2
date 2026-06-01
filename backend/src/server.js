@@ -13,6 +13,7 @@ require('./modules/chat/chatEvent');
 require('./modules/pending/pendingService');
 require('./modules/schedule/scheduleService');
 require('./modules/notification/fcmService');
+require('./modules/room/roomEvent');
 
 const PORT = process.env.PORT || 3000;
 

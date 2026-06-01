@@ -1,6 +1,9 @@
+//websocket.js
 const { Server } = require('socket.io');
 const chatService = require('../modules/chat/chatService');
 const speechService = require('../modules/speech/speechService');
+const roomService = require('../modules/room/roomService');
+require('../modules/room/roomEvent');
 
 let io;
 
@@ -86,6 +89,22 @@ function init(server) {
         socket.on('disconnect', () => {
             if (recognizeStream) recognizeStream.end();
             console.log('Voice session closed:', socket.id);
+        });
+
+        socket.on('room:join', (data) => {
+            roomService.joinRoom(socket, data);
+        });
+
+        socket.on('room:leave', (data) => {
+            roomService.leaveRoom(socket, data);
+        });
+
+        socket.on('room:message', (data) => {
+
+            console.log('=== websocket ===');
+            console.log(data);
+
+        roomService.sendMessage(socket, data);
         });
     });
 }

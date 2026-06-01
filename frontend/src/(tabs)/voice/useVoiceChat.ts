@@ -196,38 +196,18 @@ export const useVoiceChat = (onExitRequest: () => void) => {
     socketRef.current?.emit('audio-end', { userId: '1' });
   };
 
-  // 🌟 6월 1일 촬영용 맞춤형 시나리오 데이터 세팅
   const forceEnd = () => {
+    // 1. 상태를 처리 중으로 변경
     setMode('processing');
-    setResponseText('오늘의 대화를 예쁘게 정리하고 있어요...');
+    setResponseText('오늘의 대화를 정리하고 있어요...');
 
+    // 2. 서버에 강제 종료 신호 전송
     if (socketRef.current?.connected) {
       socketRef.current.emit('speech:force_end', { userId: '1' });
+    } else {
+      // 서버 연결이 끊겨있다면 즉시 종료 처리
+      onExitRequest();
     }
-
-    // 🚧 녹화용 3초 타이머 후 사용자의 대화 맞춤형 카드 바인딩
-    setTimeout(() => {
-      const 촬영용_요약_리스트 = [
-        {
-          id: 1,
-          icon: 'walk-outline',
-          time: '오전 10:00',
-          title: '딸과 쇼핑',
-          location: '시내 앞 백화점',
-        },
-        {
-          id: 2,
-          icon: 'home-outline',
-          time: '오후 3:00',
-          title: '경로당 방문',
-          location: '동네 경로당',
-        },
-      ];
-
-      setSummaryList(촬영용_요약_리스트);
-      setMode('idle');
-      setIsSummaryModalVisible(true);
-    }, 3000);
   };
 
   return {

@@ -23,7 +23,6 @@ export default function HistoryDetail() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 1. 상단 앱바 (뒤로가기) */}
       <View style={styles.appBar}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -31,14 +30,15 @@ export default function HistoryDetail() {
         >
           <Ionicons name="chevron-back" size={30} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>대화 기록 보기</Text>
-        <View style={{ width: 40 }} /> {/* 좌우 밸런스용 빈 공간 */}
+        <Text style={styles.appBarTitle}>대화 요약</Text>
+
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* 날짜 및 헤더 */}
         <Text style={styles.dateText}>📅 {date || '2026. 6. 1.'}</Text>
-        <Text style={styles.mainTitle}>오늘 담화와 나눈 기록이에요</Text>
+        <Text style={styles.mainTitle}>담화와 나눈 기록이에요</Text>
 
         {isScenario ? (
           /* 🌟 6월 1일 녹화 시나리오 맞춤 카드 UI (큰 글씨) */

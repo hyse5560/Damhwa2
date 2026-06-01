@@ -11,12 +11,12 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // 헤더 화살표 아이콘 사용을 위해 추가
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://10.0.2.2:3000/api/chat';
 
-export default function record() {
+export default function Record() {
   const navigation = useNavigation<any>();
   const [searchQuery, setSearchQuery] = useState('');
   const [sections, setSections] = useState<any[]>([]);
@@ -38,14 +38,24 @@ export default function record() {
       const formattedData = [
         {
           title: '지난 대화',
-          data: rawData.map((item: any) => ({
-            id: item.chat_id?.toString() || Math.random().toString(),
-            title: item.content || '내용 없는 대화',
-            date: item.created_at
-              ? new Date(item.created_at).toLocaleDateString()
-              : '날짜 정보 없음',
-            fullDate: item.created_at,
-          })),
+          data: rawData.map((item: any) => {
+            const dateObj = item.created_at ? new Date(item.created_at) : null;
+            let formattedDate = '날짜 정보 없음';
+
+            if (dateObj && !isNaN(dateObj.getTime())) {
+              const year = dateObj.getFullYear();
+              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const day = String(dateObj.getDate()).padStart(2, '0');
+              formattedDate = `${year}.${month}.${day}`;
+            }
+
+            return {
+              id: item.chat_id?.toString() || Math.random().toString(),
+              title: item.content || '내용 없는 대화',
+              date: formattedDate,
+              fullDate: item.created_at,
+            };
+          }),
         },
       ];
       setSections(formattedData);
@@ -110,28 +120,31 @@ export default function record() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.appBar}>
+      {/* 🌟 통합된 헤더 영역 */}
+      <View style={styles.headerArea}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
           <Ionicons name="chevron-back" size={30} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>담화 기록장</Text>
-
-        {/* 우측 빈 공간 대신 유용한 새로고침 버튼 매핑 배치 */}
+        <Text style={styles.headerTitle}>기록장</Text>
         <TouchableOpacity onPress={loadHistory} style={styles.refreshBtn}>
-          <Text style={{ fontSize: 22 }}>🔄</Text>
+          <Ionicons name="refresh" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.bigHeaderTitle}>기록장</Text>
-
+      {/* 검색창 */}
       <View style={styles.searchContainer}>
-        <Text style={{ fontSize: 20, marginRight: 10 }}>🔍</Text>
+        <Ionicons
+          name="search"
+          size={22}
+          color="#999"
+          style={{ marginRight: 10 }}
+        />
         <TextInput
           style={styles.searchInput}
-          placeholder="언제 나눈 대화인가요?"
+          placeholder="어떤 대화를 나누셨나요?"
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -166,7 +179,7 @@ export default function record() {
                 style={styles.deleteBtn}
                 onPress={() => handleDelete(item.id, item.title)}
               >
-                <Text style={{ fontSize: 20 }}>🗑️</Text>
+                <Ionicons name="trash-outline" size={24} color="#1E88E5" />
               </TouchableOpacity>
             </View>
           )}
@@ -187,7 +200,8 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 15, fontSize: 18, color: '#666' },
 
-  appBar: {
+  // 🌟 통합 헤더 스타일
+  headerArea: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -195,22 +209,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#FFF',
   },
-  appBarTitle: { fontSize: 18, fontWeight: '800', color: '#333' },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: '#333' },
   backBtn: { padding: 5 },
   refreshBtn: { padding: 5 },
-
-  bigHeaderTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-    marginLeft: 20,
-    color: '#333',
-  },
 
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 20,
+    marginTop: 15,
     marginBottom: 15,
     backgroundColor: '#F5F5F5',
     borderRadius: 15,

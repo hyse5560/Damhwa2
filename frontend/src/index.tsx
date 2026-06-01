@@ -7,7 +7,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-// 1. Expo 대신 순수 네이티브 아이콘 라이브러리 사용
+// 순수 네이티브 아이콘 라이브러리 사용
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -32,14 +32,15 @@ export default function Home() {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
+      {/* 헤더 */}
       <View style={styles.headerWrapper}>
         <Text style={[styles.header, { fontSize: headerFontSize }]}>피드</Text>
       </View>
 
       <View style={styles.divider} />
 
+      {/* 오늘의 이야기 시작 */}
       <View style={styles.talkRow}>
-        {/* 순수 네이티브 아이콘 적용 */}
         <Ionicons
           name="chatbubble-ellipses-outline"
           size={width * 0.06}
@@ -50,6 +51,7 @@ export default function Home() {
         </Text>
       </View>
 
+      {/* 음성대화 버튼 */}
       <TouchableOpacity
         style={[styles.bigButton, { paddingVertical: width * 0.12 }]}
         onPress={goVoiceScreen}
@@ -60,6 +62,7 @@ export default function Home() {
         </Text>
       </TouchableOpacity>
 
+      {/* 기록/일정 버튼 행 */}
       <View style={styles.rowButtons}>
         <TouchableOpacity
           style={styles.smallButton}
@@ -86,6 +89,7 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
+      {/* 알림 박스 */}
       <View style={styles.alertBox}>
         <Ionicons
           name="notifications-outline"
@@ -97,6 +101,7 @@ export default function Home() {
         </Text>
       </View>
 
+      {/* 추천 영역 */}
       <View style={styles.recommendBox}>
         <Text style={[styles.recommendTitle, { fontSize: width * 0.05 }]}>
           사용자님을 위한 추천
@@ -109,12 +114,52 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
+      {/* 보이스피싱 예방 가이드 배너 (광고 영역) */}
       <View style={styles.adSpace}>
-        <View style={styles.adPlaceholder}>
-          <Text style={styles.adPlaceholderText}>
-            광고 및 정보제공 배너 영역
+        <TouchableOpacity
+          style={styles.adPlaceholder}
+          onPress={() => {
+            navigation.navigate('SafetyGuide');
+          }}
+          activeOpacity={0.8}
+        >
+          {/* 전화기와 느낌표 아이콘 조합 */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              marginBottom: 10,
+            }}
+          >
+            <Ionicons name="call" size={40} color="#555" />
+            <View
+              style={{
+                backgroundColor: '#FF3B30',
+                borderRadius: 12,
+                width: 24,
+                height: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginLeft: -10, // 전화기 아이콘 우측 상단에 겹치게 배치
+                marginTop: -5,
+                borderWidth: 2,
+                borderColor: '#FFFDE7',
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
+                !
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.adTitle}>보이스피싱 예방 가이드</Text>
+          <Text style={styles.adDesc}>
+            지인을 사칭하는 전화!{'\n'}당황하지 말고 이렇게 대처하세요.
           </Text>
-        </View>
+          <View style={styles.guideButton}>
+            <Text style={styles.guideButtonText}>예방 수칙 읽기</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -191,16 +236,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  adSpace: { marginTop: 10, width: '100%' },
+  adSpace: { marginTop: 10, width: '100%', marginBottom: 20 },
   adPlaceholder: {
-    backgroundColor: '#EEE',
-    height: 180,
+    backgroundColor: '#FFFDE7',
+    borderColor: '#FFF176',
+    borderWidth: 2,
     borderRadius: 20,
-    justifyContent: 'center',
+    padding: 20,
     alignItems: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#CCC',
+    justifyContent: 'center',
   },
-  adPlaceholderText: { color: '#999', fontSize: 16 },
+  adTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#333',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  adDesc: {
+    fontSize: 15,
+    color: '#555',
+    marginTop: 6,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  guideButton: {
+    marginTop: 15,
+    backgroundColor: '#FBC02D',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  guideButtonText: {
+    color: '#FFF',
+    fontWeight: '800',
+    fontSize: 14,
+  },
 });

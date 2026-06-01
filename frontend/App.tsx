@@ -21,6 +21,8 @@ import SignUpScreen from './src/(tabs)/auth/index';
 import CommunityScreen from './src/community/CommunityScreen';
 import RoomInfo from './src/community/info';
 import CommunityRoom from './src/community/CommunityRoom';
+import CreateRoomScreen from './src/community/CreateRoomScreen';
+import SafetyGuide from './src/SafetyGuide';
 
 // 기능 화면들
 import Record from './src/(tabs)/record';
@@ -172,10 +174,18 @@ export default function App() {
         {/* FAQ */}
         <Stack.Screen name="FAQScreen" component={FAQScreen} />
 
+        {/*보이스피싱 예방 가이드 상세 화면 */}
+        <Stack.Screen name="SafetyGuide" component={SafetyGuide} />
+
         {/* 커뮤니티 및 주요 기능 화면들 */}
         <Stack.Screen name="Community" component={CommunityScreen} />
         <Stack.Screen name="RoomInfo" component={RoomInfo} />
         <Stack.Screen name="CommunityRoom" component={CommunityRoom} />
+        <Stack.Screen
+          name="CreateRoom"
+          component={CreateRoomScreen}
+          options={{ title: '채팅방 만들기' }}
+        />
 
         <Stack.Screen name="RecordScreen" component={Record} />
         <Stack.Screen name="VoiceScreen" component={VoiceScreen} />

@@ -10,7 +10,7 @@ export type VoiceMode =
   | 'listening'
   | 'speaking'
   | 'processing';
-const SERVER_URL = 'http://192.168.219.109:3000';
+const SERVER_URL = 'http://10.0.2.2:3000';
 
 export const useVoiceChat = (onExitRequest: () => void) => {
   const [mode, setMode] = useState<VoiceMode>('intro');

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// CommunityScreen.tsx
+import React from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,71 +7,32 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-  Alert,
   TextInput,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import useCommunityList, { ChatRoomItem } from './useCommunityList';
 
 const MAIN_BROWN = '#BF6A2A';
 const SUB_BEIGE = '#FFF9F3';
 
 export default function CommunityScreen() {
-  const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
 
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchText, setSearchText] = useState('');
-
-  const [chatRooms, setChatRooms] = useState([
-    {
-      id: 1,
-      title: '오늘 아침 신문 이야기',
-      time: '매일 오전 10:00',
-      thumb: '📰',
-      isMine: false,
-    },
-    {
-      id: 2,
-      title: '7080 노래 같이 들어요',
-      time: '매일 오후 02:00',
-      thumb: '📻',
-      isMine: false,
-    },
-    {
-      id: 3,
-      title: '동네 한바퀴',
-      time: '매일 오후 07:00',
-      thumb: '🏃‍♂️',
-      isMine: false,
-    },
-  ]);
-
-  const addRoom = (newRoom: any) => {
-    const roomWithMine = { ...newRoom, isMine: true };
-    setChatRooms([...chatRooms, roomWithMine]);
-  };
-
-  const deleteRoom = (id: number, title: string) => {
-    Alert.alert('삭제 확인', `'${title}' 방을 삭제하시겠습니까?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: () => setChatRooms(chatRooms.filter(room => room.id !== id)),
-      },
-    ]);
-  };
-
-  // 🌟 검색 및 정렬 로직
-  // 1. 검색어로 필터링
-  // 2. sort를 사용하여 isMine이 true인 방을 상단으로 이동
-  const processedRooms = chatRooms
-    .filter(room => room.title.toLowerCase().includes(searchText.toLowerCase()))
-    .sort((a, b) => Number(b.isMine) - Number(a.isMine));
+  // 🌟 커스텀 훅 구조분해 할당받음
+  const {
+    isSearching,
+    searchText,
+    setSearchText,
+    processedRooms,
+    handleToggleSearch,
+    deleteRoom,
+    navigateToRoom,
+    navigateToCreateRoom,
+  } = useCommunityList();
 
   return (
     <View style={styles.container}>
+      {/* 상단 헤더 구역 */}
       <View style={styles.header}>
         {isSearching ? (
           <TextInput
@@ -84,12 +46,7 @@ export default function CommunityScreen() {
           <Text style={styles.title}>오픈 채팅방</Text>
         )}
 
-        <TouchableOpacity
-          onPress={() => {
-            setIsSearching(!isSearching);
-            setSearchText('');
-          }}
-        >
+        <TouchableOpacity onPress={handleToggleSearch}>
           <Ionicons
             name={isSearching ? 'close' : 'search'}
             size={width * 0.08}
@@ -98,26 +55,24 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 채팅방 리스트 스크롤 뷰 */}
       <ScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        {processedRooms.map(room => (
-          <View key={room.id} style={styles.card}>
+        {processedRooms.map((room: ChatRoomItem) => (
+          <View key={room.room_id} style={styles.card}>
+            {/* 내가 만든 방일 때만 쓰레기통 버튼 노출 */}
             {room.isMine && (
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => deleteRoom(room.id, room.title)}
+                onPress={() => deleteRoom(room.room_id, room.room_name)} 
               >
                 <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('RoomInfo', { title: room.title })
-              }
-            >
+            <TouchableOpacity onPress={() => navigateToRoom(room)}>
               <View style={styles.thumbArea}>
                 <Text style={styles.thumbEmoji}>{room.thumb}</Text>
               </View>
@@ -126,9 +81,12 @@ export default function CommunityScreen() {
                   {room.isMine ? '내가 만든 방' : '소통 공간'}
                 </Text>
                 <Text style={styles.roomTitle} numberOfLines={2}>
-                  {room.title}
+                  {room.room_name} {/* ⭕ room.title -> room.room_name */}
                 </Text>
-                <Text style={styles.roomTime}>{room.time}</Text>
+                <Text style={styles.roomTime}>
+                  {/* ⭕ room.time -> DB생성 날짜 기반 문자열 포맷 표기 */}
+                  {room.created_at ? new Date(room.created_at).toLocaleDateString() : '방금 전'}
+                </Text>
                 <View style={styles.joinButton}>
                   <Text style={styles.joinButtonText}>참여하기</Text>
                 </View>
@@ -138,10 +96,8 @@ export default function CommunityScreen() {
         ))}
       </ScrollView>
 
-      <TouchableOpacity
-        style={styles.makeButton}
-        onPress={() => navigation.navigate('CreateRoom', { onGoBack: addRoom })}
-      >
+      {/* 하단 우측 플로팅 방 만들기 버튼 */}
+      <TouchableOpacity style={styles.makeButton} onPress={navigateToCreateRoom}>
         <Ionicons name="add-circle" size={30} color="#FFF" />
         <Text style={styles.makeButtonText}>채팅방 만들기</Text>
       </TouchableOpacity>
@@ -149,7 +105,6 @@ export default function CommunityScreen() {
   );
 }
 
-// (스타일 코드는 이전과 동일합니다)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

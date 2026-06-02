@@ -1,39 +1,23 @@
-import React, { useState } from 'react';
+// screens/CreateRoomScreen.tsx
+import React from 'react';
 import {
   View,
   TextInput,
   StyleSheet,
   TouchableOpacity,
   Text,
-  Alert,
 } from 'react-native';
+import useCreateRoom from './useCreateRoom'; // 🌟 분리한 훅 로드
 
-export default function CreateRoomScreen({ navigation, route }: any) {
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-
-  const handleCreate = () => {
-    if (!title) {
-      Alert.alert('알림', '채팅방 이름을 입력해주세요.');
-      return;
-    }
-
-    // 🌟 새로운 방 데이터 생성
-    const newRoom = {
-      id: Date.now(), // 고유한 ID 생성
-      title: title,
-      time: '방금 생성됨', // 필요에 따라 시간 입력 로직 추가 가능
-      thumb: '💬',
-    };
-
-    // 🌟 이전 화면(CommunityScreen)에서 전달받은 onGoBack 함수가 있다면 실행
-    if (route.params?.onGoBack) {
-      route.params.onGoBack(newRoom);
-    }
-
-    Alert.alert('성공', '새로운 채팅방이 생성되었습니다!');
-    navigation.goBack();
-  };
+export default function CreateRoomScreen() {
+  // 🌟 커스텀 훅으로부터 필요한 데이터와 핸들러 함수 구조분해 할당
+  const {
+    title,
+    setTitle,
+    desc,
+    setDesc,
+    handleCreate,
+  } = useCreateRoom();
 
   return (
     <View style={styles.container}>

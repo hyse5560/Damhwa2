@@ -8,9 +8,15 @@ async function textToSpeech(text) {
     try {
         const request = {
             input: { text },
-            voice: { languageCode: 'ko-KR', ssmlGender: 'FEMALE' },
-            audioConfig: { audioEncoding: 'MP3' },
+            voice: {
+                languageCode: 'ko-KR',
+                name: 'ko-KR-Chirp3-HD-Autonoe'
+            },
+            audioConfig: {
+                audioEncoding: 'MP3'
+            },
         };
+
         const [response] = await ttsClient.synthesizeSpeech(request);
         return response.audioContent.toString('base64');
     } catch (error) {

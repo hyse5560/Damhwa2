@@ -52,7 +52,7 @@ export default function HistoryDetail() {
                   <Ionicons name="cart-outline" size={30} color="#BF6A2A" />
                 </View>
                 <View>
-                  <Text style={styles.cardTime}>오전 10:00</Text>
+                  <Text style={styles.cardTime}>오전 08:00</Text>
                   <Text style={styles.cardTitle}>딸과 쇼핑</Text>
                 </View>
               </View>
@@ -75,7 +75,7 @@ export default function HistoryDetail() {
                   <Ionicons name="home-outline" size={30} color="#2F80ED" />
                 </View>
                 <View>
-                  <Text style={styles.cardTime}>오후 3:00</Text>
+                  <Text style={styles.cardTime}>오전 10:00</Text>
                   <Text style={styles.cardTitle}>경로당 방문</Text>
                 </View>
               </View>

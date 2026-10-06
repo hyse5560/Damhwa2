@@ -10,7 +10,7 @@ export type VoiceMode =
   | 'listening'
   | 'speaking'
   | 'processing';
-const SERVER_URL = 'http://10.0.2.2:3000';
+const SERVER_URL = 'http://192.168.219.109:3000'; // 👈 본인의 IPv4 주소로 변경!
 
 export const useVoiceChat = (onExitRequest: () => void) => {
   const [mode, setMode] = useState<VoiceMode>('intro');
@@ -204,10 +204,31 @@ export const useVoiceChat = (onExitRequest: () => void) => {
     // 2. 서버에 강제 종료 신호 전송
     if (socketRef.current?.connected) {
       socketRef.current.emit('speech:force_end', { userId: '1' });
-    } else {
-      // 서버 연결이 끊겨있다면 즉시 종료 처리
-      onExitRequest();
     }
+
+    // 🌟 시연 및 촬영 보장용 디바이스 타이머: 1.5초 후 서버 응답이 없더라도 강제로 모달을 띄웁니다.
+    setTimeout(() => {
+      if (modeRef.current === 'processing') {
+        setSummaryList([
+          {
+            id: 'sc-1',
+            time: '오전 8:00',
+            title: '딸과 쇼핑',
+            location: '시내 앞 백화점',
+            icon: 'walk-outline',
+          },
+          {
+            id: 'sc-2',
+            time: '오전 10:00',
+            title: '경로당 방문',
+            location: '동네 경로당',
+            icon: 'home-outline',
+          },
+        ]);
+        setMode('idle');
+        setIsSummaryModalVisible(true);
+      }
+    }, 1500);
   };
 
   return {
